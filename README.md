@@ -20,10 +20,8 @@ Phaser 3로 만든 2D 탑다운 슈팅 게임입니다. CDN 방식으로 별도 
 3. **Branch**에서 `main`(또는 사용 중인 브랜치), 폴더는 **/ (root)** 선택 후 **Save**
 4. 1~2분 뒤 아래 주소로 접속하면 게임이 바로 실행됩니다.
 
-   **실행 링크:** `https://[본인GitHub아이디].github.io/[저장소이름]/`
+https://coalab.github.io/ShootingGame_FPS/
 
-   예: 아이디가 `myid`, 저장소 이름이 `topdown-shooter` 이면  
-   → **https://coalab.github.io/ShpptingGame_FPS/**
 
 ### 2) README에서 클릭으로 열기
 
