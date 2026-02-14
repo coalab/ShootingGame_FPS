@@ -9,21 +9,30 @@ Phaser 3로 만든 2D 탑다운 슈팅 게임입니다. CDN 방식으로 별도 
    - 브라우저 주소창에 `index.html` 경로를 입력합니다.
 2. 별도의 서버나 빌드 없이 바로 플레이할 수 있습니다.
 
-## 웹에서 실행하기
+## 웹에서 실행하기 (클릭 한 번에 실행)
 
-GitHub에 저장소를 올린 뒤, 아래 링크 형식으로 웹에서 바로 플레이할 수 있습니다.  
-`[username]`과 `[repo-name]`을 본인의 GitHub 사용자명과 저장소 이름으로 바꿔 넣으세요.
+**게임이 바로 실행되려면 GitHub Pages를 사용하세요.** HTML Preview는 스크립트 실행 제한으로 게임이 동작하지 않을 수 있습니다.
 
-- **HTML Preview**  
-  [https://htmlpreview.github.io/?https://github.com/[username]/[repo-name]/blob/main/index.html](https://htmlpreview.github.io/?https://github.com/[username]/[repo-name]/blob/main/index.html)
+### 1) GitHub Pages로 실행 링크 만들기
 
-- **GitHub Pages** (저장소 설정 → Settings → Pages → Source: main branch 저장 후)  
-  `https://[username].github.io/[repo-name]/`
+1. GitHub에서 해당 저장소 열기 → **Settings** → 왼쪽 메뉴 **Pages**
+2. **Source**에서 **Deploy from a branch** 선택
+3. **Branch**에서 `main`(또는 사용 중인 브랜치), 폴더는 **/ (root)** 선택 후 **Save**
+4. 1~2분 뒤 아래 주소로 접속하면 게임이 바로 실행됩니다.
 
-> 예: 저장소가 `https://github.com/myid/topdown-shooter` 라면  
-> 웹 실행 링크는  
-> [https://htmlpreview.github.io/?https://github.com/myid/topdown-shooter/blob/main/index.html](https://htmlpreview.github.io/?https://github.com/myid/topdown-shooter/blob/main/index.html)  
-> 입니다.
+   **실행 링크:** `https://[본인GitHub아이디].github.io/[저장소이름]/`
+
+   예: 아이디가 `myid`, 저장소 이름이 `topdown-shooter` 이면  
+   → **https://myid.github.io/topdown-shooter/**
+
+### 2) README에서 클릭으로 열기
+
+저장소 주소가 정해지면, README에 아래처럼 **실제 링크**를 넣어두면 클릭 한 번에 게임이 실행됩니다.  
+(아래는 예시이므로 본인 주소로 바꿔 넣으세요.)
+
+```markdown
+[▶ 게임 바로 실행](https://본인아이디.github.io/저장소이름/)
+```
 
 ## 조작법
 
