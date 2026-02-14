@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>탑다운 슈팅 게임 - Phaser 3</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #1a1a1a;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    #game-container {
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+      border: 2px solid #333;
+    }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <div id="game-container"></div>
+
+  <script>
+    const config = {
+      type: Phaser.AUTO,
+      width: 800,
+      height: 600,
+      parent: 'game-container',
+      backgroundColor: '#2a2a2a',
+      physics: {
+        default: 'arcade',
+        arcade: { debug: false }
+      },
+      scene: {
+        preload: preload,
+        create: create,
+        update: update
+      }
+    };
+
+    const game = new Phaser.Game(config);
+
+    let player, cursors, bullets, enemies, enemyBullets, scoreText, score = 0;
+    let lastFired = 0;
+    const BULLET_SPEED = 600;
+    const FIRE_RATE = 150;
+    const ENEMY_BULLET_SPEED = 280;
+    const ENEMY_FIRE_RATE = 1800;
+
+    function preload() {
+      // 플레이어: 간단한 원 그래픽
+      this.cameras.main.setBackgroundColor('#2a2a2a');
+    }
+
+    function create() {
+      const scene = this;
+
+      // 어두운 회색 격자 배경
+      const gridSize = 40;
+      const gridGraphics = this.add.graphics();
+      gridGraphics.lineStyle(1, 0x3a3a3a, 0.8);
+      for (let x = 0; x <= config.width; x += gridSize) {
+        gridGraphics.lineBetween(x, 0, x, config.height);
+      }
+      for (let y = 0; y <= config.height; y += gridSize) {
+        gridGraphics.lineBetween(0, y, config.width, y);
+      }
+      gridGraphics.setScrollFactor(0);
+      gridGraphics.setDepth(-1);
+
+      // 플레이어 (녹색 삼각형 형태)
+      player = this.add.container(400, 300);
+      const playerBody = this.add.graphics();
+      playerBody.fillStyle(0x00cc66, 1);
+      playerBody.fillTriangle(0, -20, -12, 12, 12, 12);
+      playerBody.lineStyle(2, 0x00ff88, 1);
+      playerBody.strokeTriangle(0, -20, -12, 12, 12, 12);
+      player.add(playerBody);
+      this.physics.add.existing(player);
+      player.body.setSize(28, 36);
+      player.body.setOffset(-14, -18);
+      player.body.setCollideWorldBounds(true);
+
+      // 총알 그룹
+      bullets = this.physics.add.group({
+        defaultKey: 'bullet',
+        maxSize: 50
+      });
+
+      // 총알 그래픽 생성
+      const bulletGraphics = this.add.graphics();
+      bulletGraphics.fillStyle(0xffff00, 1);
+      bulletGraphics.fillCircle(0, 0, 4);
+      bulletGraphics.generateTexture('bullet', 8, 8);
+      bulletGraphics.destroy();
+
+      // 적 그룹
+      enemies = this.physics.add.group();
+
+      // 적 그래픽
+      const enemyGraphics = this.add.graphics();
+      enemyGraphics.fillStyle(0xcc3333, 1);
+      enemyGraphics.fillCircle(0, 0, 14);
+      enemyGraphics.lineStyle(2, 0xff6666, 1);
+      enemyGraphics.strokeCircle(0, 0, 14);
+      enemyGraphics.generateTexture('enemy', 28, 28);
+      enemyGraphics.destroy();
+
+      // 적 총알 그룹 및 텍스처 (주황색으로 구분)
+      const enemyBulletG = this.add.graphics();
+      enemyBulletG.fillStyle(0xff6600, 1);
+      enemyBulletG.fillCircle(0, 0, 5);
+      enemyBulletG.lineStyle(1, 0xffaa00, 1);
+      enemyBulletG.strokeCircle(0, 0, 5);
+      enemyBulletG.generateTexture('enemyBullet', 10, 10);
+      enemyBulletG.destroy();
+      enemyBullets = this.physics.add.group({ defaultKey: 'enemyBullet', maxSize: 80 });
+
+      // 조작
+      cursors = this.input.keyboard.createCursorKeys();
+      this.input.on('pointerdown', (pointer) => shoot.call(scene, pointer));
+      this.input.keyboard.on('keydown-SPACE', () => shoot.call(scene, { x: player.x + Math.cos(Phaser.Math.DegToRad(player.angle)) * 100, y: player.y + Math.sin(Phaser.Math.DegToRad(player.angle)) * 100 }));
+
+      // 충돌
+      this.physics.add.overlap(bullets, enemies, hitEnemy, null, this);
+      this.physics.add.overlap(player, enemies, hitPlayer, null, this);
+      this.physics.add.overlap(player, enemyBullets, hitPlayerByEnemyBullet, null, this);
+
+      // 스코어
+      scoreText = this.add.text(16, 16, 'Score: 0', {
+        fontSize: '20px',
+        fill: '#cccccc',
+        fontFamily: 'Segoe UI'
+      });
+      scoreText.setScrollFactor(0);
+
+      // 적 스폰 타이머
+      this.time.addEvent({
+        delay: 1500,
+        callback: spawnEnemy,
+        callbackScope: this,
+        loop: true
+      });
+    }
+
+    function shoot(pointer) {
+      const now = this.time.now;
+      if (now - lastFired < FIRE_RATE) return;
+      lastFired = now;
+
+      const angle = Phaser.Math.Angle.Between(player.x, player.y, pointer.x, pointer.y);
+      const bullet = bullets.get(player.x, player.y);
+      if (!bullet) return;
+
+      bullet.setActive(true);
+      bullet.setVisible(true);
+      bullet.setTexture('bullet');
+      bullet.setPosition(player.x, player.y);
+      bullet.body.reset(player.x, player.y);
+      bullet.body.setVelocity(
+        Math.cos(angle) * BULLET_SPEED,
+        Math.sin(angle) * BULLET_SPEED
+      );
+    }
+
+    function spawnEnemy() {
+      const side = Phaser.Math.Between(0, 3);
+      let x, y;
+      if (side === 0) { x = Phaser.Math.Between(0, config.width); y = 0; }
+      else if (side === 1) { x = config.width; y = Phaser.Math.Between(0, config.height); }
+      else if (side === 2) { x = Phaser.Math.Between(0, config.width); y = config.height; }
+      else { x = 0; y = Phaser.Math.Between(0, config.height); }
+
+      const enemy = enemies.create(x, y, 'enemy');
+      enemy.setData('hp', 1);
+      enemy.setData('lastShot', 0);
+      this.physics.moveToObject(enemy, player, 80);
+    }
+
+    function fireEnemyBullet(enemy) {
+      if (!player.active) return;
+      const angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, player.x, player.y);
+      const bullet = enemyBullets.get(enemy.x, enemy.y);
+      if (!bullet) return;
+      bullet.setActive(true);
+      bullet.setVisible(true);
+      bullet.setTexture('enemyBullet');
+      bullet.setPosition(enemy.x, enemy.y);
+      bullet.body.reset(enemy.x, enemy.y);
+      bullet.body.setVelocity(
+        Math.cos(angle) * ENEMY_BULLET_SPEED,
+        Math.sin(angle) * ENEMY_BULLET_SPEED
+      );
+    }
+
+    function hitPlayerByEnemyBullet(playerObj, bullet) {
+      bullet.setActive(false);
+      bullet.setVisible(false);
+      bullet.body.reset(-100, -100);
+      score = Math.max(0, score - 15);
+      scoreText.setText('Score: ' + score);
+    }
+
+    function hitEnemy(bullet, enemy) {
+      bullet.setActive(false);
+      bullet.setVisible(false);
+      bullet.body.reset(-100, -100);
+      const hp = enemy.getData('hp') - 1;
+      enemy.setData('hp', hp);
+      if (hp <= 0) {
+        score += 10;
+        scoreText.setText('Score: ' + score);
+        enemy.destroy();
+      }
+    }
+
+    function hitPlayer(playerObj, enemy) {
+      enemy.destroy();
+      score = Math.max(0, score - 5);
+      scoreText.setText('Score: ' + score);
+    }
+
+    function update() {
+      const speed = 220;
+      player.body.setVelocity(0);
+      if (cursors.left.isDown) player.body.setVelocityX(-speed);
+      if (cursors.right.isDown) player.body.setVelocityX(speed);
+      if (cursors.up.isDown) player.body.setVelocityY(-speed);
+      if (cursors.down.isDown) player.body.setVelocityY(speed);
+      player.body.velocity.normalize().scale(speed);
+
+      // 플레이어가 마우스 방향 바라보기
+      const angle = Phaser.Math.Angle.Between(player.x, player.y, this.input.activePointer.x, this.input.activePointer.y);
+      player.angle = Phaser.Math.RadToDeg(angle);
+
+      // 화면 밖 총알 제거
+      bullets.getChildren().forEach(b => {
+        if (b.active && (b.x < -20 || b.x > config.width + 20 || b.y < -20 || b.y > config.height + 20)) {
+          b.setActive(false);
+          b.setVisible(false);
+        }
+      });
+      enemyBullets.getChildren().forEach(b => {
+        if (b.active && (b.x < -30 || b.x > config.width + 30 || b.y < -30 || b.y > config.height + 30)) {
+          b.setActive(false);
+          b.setVisible(false);
+        }
+      });
+
+      // 적이 주기적으로 플레이어를 향해 발사
+      const now = this.time.now;
+      enemies.getChildren().forEach(enemy => {
+        if (!enemy.active) return;
+        if (now - enemy.getData('lastShot') >= ENEMY_FIRE_RATE) {
+          enemy.setData('lastShot', now);
+          fireEnemyBullet(enemy);
+        }
+      });
+    }
+  </script>
+</body>
+</html>
