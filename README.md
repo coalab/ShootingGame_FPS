@@ -23,7 +23,7 @@ Phaser 3로 만든 2D 탑다운 슈팅 게임입니다. CDN 방식으로 별도 
    **실행 링크:** `https://[본인GitHub아이디].github.io/[저장소이름]/`
 
    예: 아이디가 `myid`, 저장소 이름이 `topdown-shooter` 이면  
-   → **https://ShootingGame_FPS.github.io/topdown-shooter/**
+   → **https://coalab.github.io/ShpptingGame_FPS/**
 
 ### 2) README에서 클릭으로 열기
 
