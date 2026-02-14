@@ -9,6 +9,22 @@ Phaser 3로 만든 2D 탑다운 슈팅 게임입니다. CDN 방식으로 별도 
    - 브라우저 주소창에 `index.html` 경로를 입력합니다.
 2. 별도의 서버나 빌드 없이 바로 플레이할 수 있습니다.
 
+## 웹에서 실행하기
+
+GitHub에 저장소를 올린 뒤, 아래 링크 형식으로 웹에서 바로 플레이할 수 있습니다.  
+`[username]`과 `[repo-name]`을 본인의 GitHub 사용자명과 저장소 이름으로 바꿔 넣으세요.
+
+- **HTML Preview**  
+  [https://htmlpreview.github.io/?https://github.com/[username]/[repo-name]/blob/main/index.html](https://htmlpreview.github.io/?https://github.com/[username]/[repo-name]/blob/main/index.html)
+
+- **GitHub Pages** (저장소 설정 → Settings → Pages → Source: main branch 저장 후)  
+  `https://[username].github.io/[repo-name]/`
+
+> 예: 저장소가 `https://github.com/myid/topdown-shooter` 라면  
+> 웹 실행 링크는  
+> [https://htmlpreview.github.io/?https://github.com/myid/topdown-shooter/blob/main/index.html](https://htmlpreview.github.io/?https://github.com/myid/topdown-shooter/blob/main/index.html)  
+> 입니다.
+
 ## 조작법
 
 | 입력 | 동작 |
